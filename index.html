@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบขอหนังสือรับรองและสลิปเงินเดือน</title>
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: #f4f7f6; 
+            padding: 10px; 
+            margin: 0;
+        }
+        .container { 
+            width: 100%; 
+            max-width: 800px; 
+            margin: 10px auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
+        }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 15px; }
+        
+        input[type="text"], input[type="number"], input[type="email"], select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            font-family: 'Sarabun', sans-serif;
+        }
+        
+        .hidden { display: none; }
+        .section-box { border: 1px solid #007bff; padding: 15px; margin-top: 20px; border-radius: 5px; background-color: #f8fbff; }
+        .common-box { border: 1px solid #6c757d; padding: 15px; margin-top: 20px; border-radius: 5px; background-color: #fff; }
+        
+        button[type="submit"] { 
+            background: #28a745; 
+            color: white; 
+            padding: 15px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 18px; 
+            font-weight: bold;
+            margin-top: 20px; 
+        }
+        button[type="submit"]:hover { background: #218838; }
+        
+        .signature-pad { 
+            border: 1px solid #ccc; 
+            width: 100%; 
+            height: 200px; 
+            cursor: crosshair; 
+            background-color: #fff;
+            touch-action: none; 
+            border-radius: 4px;
+        }
+        
+        .btn-track {
+            background-color: #17a2b8;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background 0.3s;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-track:hover { background-color: #138496; }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; 
+            gap: 10px;
+        }
+        .header-container h2 { margin: 0; padding: 0; font-size: 22px; }
+
+        .checkbox-group, .radio-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 5px; }
+        .checkbox-group label, .radio-group label { font-weight: normal; cursor: pointer; display: flex; align-items: center; font-size: 16px; }
+        .checkbox-group input, .radio-group input { width: 20px; height: 20px; margin-right: 8px; cursor: pointer; }
+
+        /* ปรับรูปแบบ Dropdown ของวันที่ */
+        .date-select-group { display: flex; gap: 8px; }
+        .date-select-group select { padding: 12px 8px; }
+
+        footer { margin-top: 20px; padding: 10px; color: #555; }
+        footer h3 { margin-bottom: 5px; font-size: 16px; }
+        footer p { margin-top: 0; font-size: 14px; }
+
+        @media (max-width: 600px) {
+            .header-container { flex-direction: column; text-align: center; }
+            .btn-track { width: 100%; box-sizing: border-box; }
+            .container { padding: 15px; border-radius: 0; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-container">
+        <img src="logo.png" width="50" height="50" alt="Logo">
+        <h2>📝 คำขอเอกสารทางการเงิน</h2>
+        <a href="track.php" class="btn-track">🔍 ติดตามสถานะคำขอ</a>
+    </div>
+    
+    <form action="submit_request.php" method="POST" enctype="multipart/form-data" id="requestForm">
+        
+        <div class="form-group">
+            <label style="font-size: 18px; color: #007bff;">1. เลือกเอกสารที่ต้องการขอ:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="req_cert" name="request_type[]" value="cert" onclick="toggleSections()"> หนังสือรับรองเงินเดือน</label>
+                <label><input type="checkbox" id="req_payslip" name="request_type[]" value="payslip" onclick="toggleSections()"> สลิปเงินเดือน</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label style="color: #f0005c;">อีเมลสำหรับรับผลการอนุมัติและการติดตาม (Email):</label>
+            <input type="email" name="email" placeholder="example@email.com" autocomplete="email" inputmode="email" onblur="this.value = this.value.trim();" required>
+        </div>
+
+        <div class="common-box">
+            <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">👤 ข้อมูลผู้ขอ </h3>
+            <div class="form-group">
+                <label>คำนำหน้า:</label>
+                <select id="main_title" required>
+                    <option value="นาย">นาย</option>
+                    <option value="นาง">นาง</option>
+                    <option value="นางสาว">นางสาว</option>
+                </select>
+            </div>
+            <div class="form-group"><label>ชื่อ-นามสกุล:</label><input type="text" id="main_fullname" placeholder="ระบุชื่อ และนามสกุล" required></div>
+            <div class="form-group"><label>เลขบัตรประชาชน 13 หลัก:</label><input type="text" id="main_id_card" maxlength="13" placeholder="xxxxxxxxxxxxx" required></div>
+            <div class="form-group"><label>ตำแหน่ง:</label><input type="text" id="main_position" placeholder="ระบุตำแหน่ง" required></div>
+            <div class="form-group">
+                <label>สังกัด (หน่วย):</label>
+                <select id="main_department" required>
+                    <option value="">กำลังโหลดข้อมูล...</option>
+                </select>
+            </div>
+        </div>
+
+        <input type="hidden" name="cert_title" id="cert_title">
+        <input type="hidden" name="cert_fullname" id="cert_fullname">
+        <input type="hidden" name="cert_id_card" id="cert_id_card">
+        <input type="hidden" name="cert_position" id="cert_position">
+        <input type="hidden" name="cert_department" id="cert_department">
+
+        <input type="hidden" name="slip_title" id="slip_title">
+        <input type="hidden" name="slip_fullname" id="slip_fullname">
+        <input type="hidden" name="slip_id_card" id="slip_id_card">
+        <input type="hidden" name="slip_position" id="slip_position">
+        <input type="hidden" name="slip_department" id="slip_department">
+
+        <div id="cert_section" class="section-box hidden">
+            <h3 style="margin-top: 0; color: #007bff;">📄 รายละเอียด: หนังสือรับรองเงินเดือน</h3>
+            <div class="form-group">
+                <label>ประเภทบุคลากร:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="emp_type" value="A" onclick="toggleEmpType()"> ข้าราชการ</label>
+                    <label><input type="radio" name="emp_type" value="B" onclick="toggleEmpType()"> พนักงานจ้าง</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>บรรจุเมื่อ:</label>
+                <div class="date-select-group">
+                    <select id="cert_join_day" style="flex: 1;"></select>
+                    <select id="cert_join_month" style="flex: 1.5;"></select>
+                    <select id="cert_join_year" style="flex: 1.2;"></select>
+                </div>
+                <input type="hidden" name="cert_join_date" id="cert_join_date">
+            </div>
+            
+            <div class="form-group">
+                <label>อัตราเงินเดือน:</label>
+                <input type="number" step="0.01" name="salary" id="salary" placeholder="0.00" oninput="calculateTotal()">
+            </div>
+            <div class="form-group">
+                <label>เงินประจำตำแหน่ง:</label>
+                <input type="number" step="0.01" name="position_allowance" id="position_allowance" placeholder="0.00" oninput="calculateTotal()">
+            </div>
+            <div class="form-group">
+                <label>เงินค่าตอบแทนรายเดือน:</label>
+                <input type="number" step="0.01" name="monthly_remuneration" id="monthly_remuneration" placeholder="0.00" oninput="calculateTotal()">
+            </div>
+            <div class="form-group">
+                <label>ค่าครองชีพ:</label>
+                <input type="number" step="0.01" name="living_allowance" id="living_allowance" placeholder="0.00" oninput="calculateTotal()">
+            </div>
+            <div class="form-group">
+                <label>รวมรายรับทั้งสิ้น (บาท):</label>
+                <input type="number" step="0.01" name="total_income" id="total_income" readonly style="background-color: #e9ecef; font-weight: bold; color: #333;">
+            </div>
+            <div class="form-group">
+                <label>ขอใบรับรองเพื่อ:</label>
+                <select name="purpose" id="purpose" onchange="toggleOtherPurpose()">
+                    <option value="">-- เลือก --</option>
+                    <option value="กู้เงินจากธนาคารออมสิน">กู้เงินจากธนาคารออมสิน</option>
+                    <option value="กู้เงินจากธนาคารอิสลามแห่งประเทศไทย">กู้เงินจากธนาคารอิสลามแห่งประเทศไทย</option>
+                    <option value="ทำบัตรเครดิต/เดบิต">ทำบัตรเครดิต/เดบิต</option>
+                    <option value="กู้เงินจากธนาคารกรุงไทย">กู้เงินจากธนาคารกรุงไทย</option>
+                    <option value="กู้เงินซื้อรถ">กู้เงินซื้อรถ</option>
+                    <option value="ค้ำประกันการเช่าซื้อรถยนต์">ค้ำประกันการเช่าซื้อรถยนต์</option>
+                    <option value="ค้ำประกันเงินกู้คนพิการ">ค้ำประกันเงินกู้คนพิการ</option>
+                    <option value="ค้ำประกันการกู้เงิน">ค้ำประกันการกู้เงิน</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="other_purpose_div">
+                <label>โปรดระบุ (อื่นๆ):</label>
+                <input type="text" name="purpose_other" placeholder="ระบุเหตุผลที่ต้องการขอ">
+            </div>
+
+            <div class="form-group"><label>เบอร์โทรศัพท์:</label><input type="text" name="phone" placeholder="08xxxxxxxx"></div>
+
+            <div id="contract_section" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <h4 style="margin-top: 0; color: #856404;">เฉพาะพนักงานจ้าง</h4>
+                <div class="form-group"><label>สัญญาจ้างเลขที่:</label><input type="text" name="contract_no" placeholder="เช่น 1/2566"></div>
+                
+                <div class="form-group">
+                    <label>สัญญาจ้างลงวันที่:</label>
+                    <div class="date-select-group">
+                        <select id="contract_day" style="flex: 1;"></select>
+                        <select id="contract_month" style="flex: 1.5;"></select>
+                        <select id="contract_year" style="flex: 1.2;"></select>
+                    </div>
+                    <input type="hidden" name="contract_date" id="contract_date">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>สัญญาจ้างสิ้นสุดวันที่:</label>
+                    <div class="date-select-group">
+                        <select id="contract_end_day" style="flex: 1;"></select>
+                        <select id="contract_end_month" style="flex: 1.5;"></select>
+                        <select id="contract_end_year" style="flex: 1.2;"></select>
+                    </div>
+                    <input type="hidden" name="contract_end_date" id="contract_end_date">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ลายเซ็นผู้ขอ (ใช้นิ้ววาดลายเซ็น):</label>
+                <canvas id="signatureCanvas" class="signature-pad"></canvas>
+                <button type="button" onclick="clearSignature()" style="margin-top:10px; padding: 10px; width: 100%; border-radius: 4px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 16px;">ล้างลายเซ็น</button>
+                <input type="hidden" name="signature_data" id="signature_data">
+            </div>
+        </div>
+
+        <div id="payslip_section" class="section-box hidden" style="border-color: #28a745; background-color: #f4fff6;">
+            <h3 style="margin-top: 0; color: #28a745;">💸 รายละเอียด: ขอสลิปเงินเดือน</h3>
+            <div class="form-group">
+                <label>เดือนที่ต้องการขอ:</label>
+                <select name="req_month">
+                    <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+                    <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                    <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+                    <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>ปีที่ต้องการขอ (พ.ศ.):</label>
+                <select id="req_year" name="req_year"></select> 
+            </div>
+        </div>
+
+        <button type="submit" onclick="return validateBeforeSubmit()">ส่งคำขอเอกสาร</button>
+    </form>
+</div>
+
+<footer>
+    <center>
+    <h3>Version 2.1</h3>
+    <p>Author: สำนักคลัง อบจ.ศรีสะเกษ tel: 045814676 ต่อ 3<br>
+    <a href="https://line.me/R/ti/p/@827ltjdc" style="color: #06e068; text-decoration: none;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/LINE_New_App_Icon_%282020-12%29.png/120px-LINE_New_App_Icon_%282020-12%29.png" width="50" height="50" alt="LINE"><br>LINECHAT<br></a></p>
+    <a href="mailto:klunk.adm.sskpao@gmail.com" style="color: #007bff; text-decoration: none;">klunk.adm.sskpao@gmail.com</a>
+    </center>
+</footer>
+
+<script>
+    // ---------------------------------------------------
+    // ฟังก์ชันสร้างตัวเลือกวันที่ (วัน/เดือน/ปี พ.ศ.)
+    // ---------------------------------------------------
+    function generateDateOptions() {
+        const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        
+        let dayOptions = '<option value="">วัน</option>';
+        for (let i = 1; i <= 31; i++) {
+            let val = i < 10 ? '0' + i : i;
+            dayOptions += `<option value="${val}">${i}</option>`;
+        }
+
+        let monthOptions = '<option value="">เดือน</option>';
+        thaiMonths.forEach((m, index) => {
+            let val = (index + 1) < 10 ? '0' + (index + 1) : (index + 1);
+            monthOptions += `<option value="${val}">${m}</option>`;
+        });
+
+        const currentYear = new Date().getFullYear();
+        const currentYearTH = currentYear + 543;
+        
+        let yearOptions = '<option value="">ปี พ.ศ.</option>';
+        // แสดงปีตั้งแต่ +10 ปีข้างหน้า ย้อนหลังไป 60 ปี
+        for (let y = currentYearTH + 10; y >= currentYearTH - 60; y--) {
+            yearOptions += `<option value="${y}">${y}</option>`;
+        }
+
+        // นำตัวเลือกไปใส่ใน Dropdown ทั้ง 3 ชุด
+        ['cert_join', 'contract', 'contract_end'].forEach(prefix => {
+            document.getElementById(prefix + '_day').innerHTML = dayOptions;
+            document.getElementById(prefix + '_month').innerHTML = monthOptions;
+            document.getElementById(prefix + '_year').innerHTML = yearOptions;
+        });
+
+        // จัดการ Dropdown ปีสำหรับ สลิปเงินเดือน (ส่งค่าเข้าเซิร์ฟเวอร์เป็น ค.ศ. แต่โชว์ พ.ศ.)
+        let payslipYearHTML = "";
+        for(let i=0; i<=3; i++) { 
+            let y = currentYear - i;
+            payslipYearHTML += `<option value="${y}">${y + 543}</option>`;
+        }
+        document.getElementById('req_year').innerHTML = payslipYearHTML;
+    }
+
+
+    // ฟังก์ชันจัดการเปิด/ปิด Section และจัดการระบบ Required แบบครอบคลุม
+    function toggleSections() {
+        const reqCert = document.getElementById('req_cert').checked;
+        const reqPayslip = document.getElementById('req_payslip').checked;
+
+        const certSection = document.getElementById('cert_section');
+        certSection.classList.toggle('hidden', !reqCert);
+        
+        // เพิ่ม select เข้าไปใน querySelector เพื่อรองรับ dropdown วันที่
+        const certInputs = certSection.querySelectorAll('input:not([type="hidden"]):not([readonly]), select');
+        certInputs.forEach(input => { input.required = reqCert; });
+
+        const payslipSection = document.getElementById('payslip_section');
+        payslipSection.classList.toggle('hidden', !reqPayslip);
+        
+        const payslipInputs = payslipSection.querySelectorAll('input:not([type="hidden"]), select');
+        payslipInputs.forEach(input => { input.required = reqPayslip; });
+
+        if (reqCert) {
+            toggleEmpType();
+            toggleOtherPurpose();
+            setTimeout(resizeCanvas, 100);
+        } else {
+            // ปลด Required ออกเมื่อติ๊กออก
+            document.querySelectorAll('#contract_section input, #contract_section select, #other_purpose_div input').forEach(f => f.required = false);
+        }
+    }
+
+    function toggleEmpType() {
+        const reqCert = document.getElementById('req_cert').checked;
+        const empTypeRadio = document.querySelector('input[name="emp_type"]:checked');
+        const contractSection = document.getElementById('contract_section');
+        // เพิ่ม select
+        const contractInputs = contractSection.querySelectorAll('input:not([type="hidden"]), select');
+
+        if (reqCert && empTypeRadio && empTypeRadio.value === 'B') {
+            contractSection.classList.remove('hidden');
+            contractInputs.forEach(input => input.required = true);
+        } else {
+            contractSection.classList.add('hidden');
+            contractInputs.forEach(input => input.required = false);
+        }
+    }
+
+    function toggleOtherPurpose() {
+        const reqCert = document.getElementById('req_cert').checked;
+        const purpose = document.getElementById('purpose').value;
+        const otherDiv = document.getElementById('other_purpose_div');
+        const otherInput = otherDiv.querySelector('input');
+
+        if (reqCert && purpose === 'อื่นๆ') {
+            otherDiv.classList.remove('hidden');
+            otherInput.required = true;
+        } else {
+            otherDiv.classList.add('hidden');
+            otherInput.required = false;
+        }
+    }
+
+    // ฟังก์ชันดึงข้อมูล JSON หน่วยงาน
+    async function loadDepartments() {
+        const selectDept = document.getElementById('main_department');
+        try {
+            const apiUrl = 'https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrTqlsvX9EGa0e5zxv6qWyu4_nMD16SYo3jBG9Rg1Xfk9o5DAaB_tXw8IYuedpEifzaPL_83JefSI2EiSIcQVtB85zkDz27T3UrMViZ1G6VOx9CYXBz6dExz5M1dpMBbxa4O2U9Ni_dsd_Kfbpi8ohe9cJxO4k1nRfAwKsU6YSVAFC1goHTkfE-Nm-dkjwpqO4kt2KkNiNpgXaSYvmRwSjKm1YjKp4JPOBWqRBx_X0m0MiA3V5Y1WpZAXhlEmo87Ei39vqeGVNNT3tfwJFjekYEqF5oSVQ&lib=MxAy61XuoMhvZz6-dtelljFG8jR3uC7Sx'; 
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            
+            let deptHTML = '<option value="">-- กรุณาเลือกสังกัด --</option>';
+
+            if (data && data.options) {
+                data.options.forEach(item => {
+                    let value = typeof item === 'object' ? (item.value || item.id || item.name) : item;
+                    let text = typeof item === 'object' ? (item.text || item.name || item.value) : item;
+                    deptHTML += `<option value="${value}">${text}</option>`;
+                });
+            } else {
+                deptHTML += '<option value="">ไม่พบข้อมูลสังกัด</option>';
+            }
+            selectDept.innerHTML = deptHTML;
+        } catch (error) {
+            console.error('Error fetching departments:', error);
+            selectDept.innerHTML = '<option value="">เกิดข้อผิดพลาดในการโหลดข้อมูล</option>';
+        }
+    }
+
+    window.onload = function() {
+        loadDepartments();
+        generateDateOptions(); // สร้างตัวเลือกวันที่ทันทีที่เปิดเว็บ
+        toggleSections();
+    };
+
+    // ระบบ Canvas วาดลายเซ็น 
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasSignature = false; 
+
+    function resizeCanvas() {
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        if(canvas.width > 0 && canvas.height > 0) {
+            tempCtx.drawImage(canvas, 0, 0);
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000';
+
+        if(tempCanvas.width > 0 && tempCanvas.height > 0) {
+            ctx.drawImage(tempCanvas, 0, 0);
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        if(!document.getElementById('cert_section').classList.contains('hidden')) {
+            resizeCanvas();
+        }
+    });
+
+    function getPointerPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        return { 
+            x: (clientX - rect.left) * (canvas.width / rect.width), 
+            y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+    }
+
+    const startDrawing = (e) => {
+        isDrawing = true;
+        const pos = getPointerPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        e.preventDefault(); 
+    };
+
+    const draw = (e) => {
+        if (!isDrawing) return;
+        const pos = getPointerPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        hasSignature = true; 
+        e.preventDefault();
+    };
+
+    const stopDrawing = () => {
+        isDrawing = false;
+        ctx.beginPath();
+    };
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+
+    function clearSignature() { 
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        hasSignature = false; 
+    }
+    
+    function saveSignature() { 
+        document.getElementById('signature_data').value = canvas.toDataURL("image/png"); 
+    }
+
+    // ฟังก์ชันคำนวณรายรับอัตโนมัติ
+    function calculateTotal() {
+        let salary = parseFloat(document.getElementById('salary').value) || 0;
+        let posAllowance = parseFloat(document.getElementById('position_allowance').value) || 0;
+        let monthlyRem = parseFloat(document.getElementById('monthly_remuneration').value) || 0;
+        let livingAllowance = parseFloat(document.getElementById('living_allowance').value) || 0;
+        let total = salary + posAllowance + monthlyRem + livingAllowance;
+        document.getElementById('total_income').value = total.toFixed(2);
+    }
+
+    // ตรวจสอบและประมวลผลวันที่ก่อนส่ง
+    function validateBeforeSubmit() {
+        const reqCert = document.getElementById('req_cert').checked;
+        const reqPayslip = document.getElementById('req_payslip').checked;
+        
+        if (!reqCert && !reqPayslip) {
+            alert("กรุณาเลือกเอกสารที่ต้องการขออย่างน้อย 1 อย่างค่ะ");
+            return false;
+        }
+
+        // =====================================
+        // แปลง Dropdown วันที่ (พ.ศ.) ให้เป็นรูปแบบ YYYY-MM-DD (ค.ศ.) เพื่อส่งเข้าฐานข้อมูล
+        // =====================================
+        if (reqCert) {
+            // 1. ตรวจสอบวันที่บรรจุ
+            const jDay = document.getElementById('cert_join_day').value;
+            const jMonth = document.getElementById('cert_join_month').value;
+            const jYear = document.getElementById('cert_join_year').value;
+            if (!jDay || !jMonth || !jYear) {
+                alert("กรุณาระบุวันที่บรรจุให้ครบถ้วนค่ะ");
+                return false;
+            }
+            // หักลบ 543 ให้กลายเป็น ค.ศ.
+            document.getElementById('cert_join_date').value = (parseInt(jYear) - 543) + "-" + jMonth + "-" + jDay;
+
+            // 2. ตรวจสอบวันที่สำหรับพนักงานจ้าง (กรณีเลือก Type B)
+            const empTypeRadio = document.querySelector('input[name="emp_type"]:checked');
+            if (empTypeRadio && empTypeRadio.value === 'B') {
+                const cDay = document.getElementById('contract_day').value;
+                const cMonth = document.getElementById('contract_month').value;
+                const cYear = document.getElementById('contract_year').value;
+                if (!cDay || !cMonth || !cYear) {
+                    alert("กรุณาระบุ 'สัญญาจ้างลงวันที่' ให้ครบถ้วนค่ะ");
+                    return false;
+                }
+                document.getElementById('contract_date').value = (parseInt(cYear) - 543) + "-" + cMonth + "-" + cDay;
+
+                const ceDay = document.getElementById('contract_end_day').value;
+                const ceMonth = document.getElementById('contract_end_month').value;
+                const ceYear = document.getElementById('contract_end_year').value;
+                if (!ceDay || !ceMonth || !ceYear) {
+                    alert("กรุณาระบุ 'สัญญาจ้างสิ้นสุดวันที่' ให้ครบถ้วนค่ะ");
+                    return false;
+                }
+                document.getElementById('contract_end_date').value = (parseInt(ceYear) - 543) + "-" + ceMonth + "-" + ceDay;
+            }
+
+            // ตรวจสอบลายเซ็น
+            if (!hasSignature) {
+                alert("กรุณาวาดลายเซ็นผู้ขอ ในกรอบที่กำหนดก่อนส่งคำขอค่ะ");
+                return false; 
+            }
+            saveSignature(); 
+        }
+
+        // คัดลอกข้อมูลลง Hidden Fields
+        const title = document.getElementById('main_title').value;
+        const fullname = document.getElementById('main_fullname').value;
+        const idCard = document.getElementById('main_id_card').value;
+        const position = document.getElementById('main_position').value;
+        const dept = document.getElementById('main_department').value;
+
+        document.getElementById('cert_title').value = title;
+        document.getElementById('cert_fullname').value = fullname;
+        document.getElementById('cert_id_card').value = idCard;
+        document.getElementById('cert_position').value = position;
+        document.getElementById('cert_department').value = dept;
+
+        document.getElementById('slip_title').value = title;
+        document.getElementById('slip_fullname').value = fullname;
+        document.getElementById('slip_id_card').value = idCard;
+        document.getElementById('slip_position').value = position;
+        document.getElementById('slip_department').value = dept;
+        
+        return true; 
+    }
+</script>
+
+</body>
+</html>

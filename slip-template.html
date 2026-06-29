@@ -1,0 +1,65 @@
+<div style="border: 1px solid #000; padding: 20px;">
+<div style="font-size: 12px; color: #666; text-align: right; margin-bottom: -15px;">รหัสอ้างอิง: {TRACKING_CODE} (ID: {REQUEST_ID})</div>
+<table style="width: 100%; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 10px; border-collapse: collapse;">
+<tbody>
+<tr>
+<td style="width: 100%; text-align: center; vertical-align: middle; border: none;"><img src="logo.png" width="50" height="50">
+<h2 style="margin: 0; color: #333;">สลิปเงินเดือน (Payslip)</h2>
+</td>
+</tr>
+</tbody>
+</table>
+<table style="width: 100%; margin-bottom: 20px; border: none; height: 67.2px;">
+<tbody>
+<tr>
+<td style="border: none; height: 22.4px;"><strong>ชื่อ-สกุล:</strong> {TITLE}{FULLNAME}</td>
+<td style="text-align: right; border: none; height: 22.4px;"><strong>ประจำเดือน:</strong> {REQ_MONTH}/{REQ_YEAR}</td>
+</tr>
+<tr>
+<td style="border: none; height: 22.4px;"><strong>ตำแหน่ง:</strong> {POSITION}</td>
+<td style="text-align: right; border: none; height: 22.4px;"><strong>สังกัด:</strong> {DEPARTMENT}</td>
+</tr>
+<tr>
+<td style="border: none; height: 22.4px;"></td>
+<td style="border: none; height: 22.4px; text-align: right;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; องค์การบริหารส่วนจังหวัดศรีสะเกษ</td>
+</tr>
+</tbody>
+</table>
+<table style="width: 100%; border-collapse: collapse; border: 1px solid rgb(0, 0, 0); height: 107.4px;">
+<tbody>
+<tr>
+<th style="border: 1px solid rgb(0, 0, 0); padding: 10px; width: 50%; height: 22.4px;">รายได้ (Earnings)</th>
+<th style="border: 1px solid rgb(0, 0, 0); padding: 10px; width: 50%; height: 22.4px;">รายการหัก (Deductions)</th>
+</tr>
+<tr>
+<td style="border: 1px solid rgb(0, 0, 0); padding: 10px; vertical-align: top; height: 37.4px;">
+<p style="text-align: right;">{INCOMES_HTML}</p>
+<table style="width: 100%; border: none; margin-right: 0px; margin-left: auto;"></table>
+</td>
+<td style="border: 1px solid rgb(0, 0, 0); padding: 10px; vertical-align: top; height: 37.4px;">
+<p style="text-align: right;">{EXPENSES_HTML}</p>
+<table style="width: 100%; border: none;"></table>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid rgb(0, 0, 0); padding: 10px; height: 22.4px;"><strong>รวมรายได้:</strong> <span style="float: right;">{TOTAL_INCOMES}</span></td>
+<td style="border: 1px solid rgb(0, 0, 0); padding: 10px; height: 22.4px;"><strong>รวมรายการหัก:</strong> <span style="float: right;">{TOTAL_EXPENSES}</span></td>
+</tr>
+<tr>
+<td style="border: 1px solid rgb(0, 0, 0); padding: 15px; text-align: center; font-size: 24px; background-color: rgb(240, 240, 240); height: 25.2px;" colspan="2"><strong>เงินได้สุทธิ (Net Pay): {NET_PAY} บาท</strong></td>
+</tr>
+<tr>
+<td style="border: 1px solid rgb(0, 0, 0); padding: 15px; text-align: center; font-size: 24px; background-color: rgb(240, 240, 240);" colspan="2"><strong><span>({TOTAL_INCOME_TEXT})</span></strong></td>
+</tr>
+</tbody>
+</table>
+<br><br>
+<table style="width: 100%; text-align: center; border: none;">
+<tbody>
+<tr>
+<td style="width: 100%; border: none; vertical-align: bottom;">(ลงชื่อผู้รับรอง)<br><br>{APPR_SIGNATURE}<br>({APPR_NAME})<br>{APPR_POSITION}</td>
+</tr>
+</tbody>
+</table>
+<p><span>{QR_CODE}</span></p>
+</div>
